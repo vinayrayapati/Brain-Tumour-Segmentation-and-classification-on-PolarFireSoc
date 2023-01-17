@@ -1,0 +1,331 @@
+   1              		.file	"hal_irq.c"
+   2              		.option nopic
+   3              		.attribute arch, "rv64i2p0_m2p0_a2p0_f2p0_d2p0_c2p0"
+   4              		.attribute unaligned_access, 0
+   5              		.attribute stack_align, 16
+   6              		.text
+   7              	.Ltext0:
+   8              		.cfi_sections	.debug_frame
+   9              		.section	.text.HAL_enable_interrupts,"ax",@progbits
+  10              		.align	1
+  11              		.globl	HAL_enable_interrupts
+  13              	HAL_enable_interrupts:
+  14              	.LFB5:
+  15              		.file 1 "../src/platform/hal/hal_irq.c"
+   1:../src/platform/hal/hal_irq.c **** /*******************************************************************************
+   2:../src/platform/hal/hal_irq.c ****  * Copyright 2019-2020 Microchip FPGA Embedded Systems Solutions.
+   3:../src/platform/hal/hal_irq.c ****  *
+   4:../src/platform/hal/hal_irq.c ****  * SPDX-License-Identifier: MIT
+   5:../src/platform/hal/hal_irq.c ****  *
+   6:../src/platform/hal/hal_irq.c ****  * MPFS HAL Embedded Software
+   7:../src/platform/hal/hal_irq.c ****  *
+   8:../src/platform/hal/hal_irq.c ****  */
+   9:../src/platform/hal/hal_irq.c **** /***************************************************************************//**
+  10:../src/platform/hal/hal_irq.c ****  * 
+  11:../src/platform/hal/hal_irq.c ****  * Legacy interrupt control functions for the Microchip driver library hardware
+  12:../src/platform/hal/hal_irq.c ****  * abstraction layer.
+  13:../src/platform/hal/hal_irq.c ****  *
+  14:../src/platform/hal/hal_irq.c ****  */
+  15:../src/platform/hal/hal_irq.c **** #include <stdio.h>
+  16:../src/platform/hal/hal_irq.c **** #include "hal/hal.h"
+  17:../src/platform/hal/hal_irq.c **** #include "mpfs_hal/common/mss_util.h"
+  18:../src/platform/hal/hal_irq.c **** 
+  19:../src/platform/hal/hal_irq.c **** #ifdef __cplusplus
+  20:../src/platform/hal/hal_irq.c **** extern "C" {
+  21:../src/platform/hal/hal_irq.c **** #endif
+  22:../src/platform/hal/hal_irq.c **** 
+  23:../src/platform/hal/hal_irq.c **** /*------------------------------------------------------------------------------
+  24:../src/platform/hal/hal_irq.c ****  * 
+  25:../src/platform/hal/hal_irq.c ****  */
+  26:../src/platform/hal/hal_irq.c **** void HAL_enable_interrupts(void) {
+  16              		.loc 1 26 34
+  17              		.cfi_startproc
+  27:../src/platform/hal/hal_irq.c ****     __enable_irq();
+  18              		.loc 1 27 5
+  19 0000 17030000 		tail	__enable_irq
+  19      67000300 
+  20              	.LVL0:
+  21              		.cfi_endproc
+  22              	.LFE5:
+  24              		.section	.text.HAL_disable_interrupts,"ax",@progbits
+  25              		.align	1
+  26              		.globl	HAL_disable_interrupts
+  28              	HAL_disable_interrupts:
+  29              	.LFB6:
+  28:../src/platform/hal/hal_irq.c **** }
+  29:../src/platform/hal/hal_irq.c **** 
+  30:../src/platform/hal/hal_irq.c **** /*------------------------------------------------------------------------------
+  31:../src/platform/hal/hal_irq.c ****  * 
+  32:../src/platform/hal/hal_irq.c ****  */
+  33:../src/platform/hal/hal_irq.c **** psr_t HAL_disable_interrupts(void) {
+  30              		.loc 1 33 36
+  31              		.cfi_startproc
+  34:../src/platform/hal/hal_irq.c ****     psr_t psr;
+  32              		.loc 1 34 5
+  35:../src/platform/hal/hal_irq.c ****     psr = read_csr(mstatus);
+  33              		.loc 1 35 5
+  34              	.LBB2:
+  35              		.loc 1 35 11
+  36              		.loc 1 35 11
+  37              	.LBE2:
+  33:../src/platform/hal/hal_irq.c ****     psr_t psr;
+  38              		.loc 1 33 36 is_stmt 0
+  39 0000 0111     		addi	sp,sp,-32
+  40              		.cfi_def_cfa_offset 32
+  41 0002 06EC     		sd	ra,24(sp)
+  42              		.cfi_offset 1, -8
+  43              	.LBB3:
+  44              		.loc 1 35 11
+  45              	 #APP
+  46              	# 35 "../src/platform/hal/hal_irq.c" 1
+  36              	    __disable_irq();
+  47              		csrr a0, mstatus
+  48              	# 0 "" 2
+  49              	 #NO_APP
+  50 0008 2AE4     		sd	a0,8(sp)
+  51              	.LVL1:
+  35:../src/platform/hal/hal_irq.c ****     psr = read_csr(mstatus);
+  52              		.loc 1 35 11 is_stmt 1
+  53              	.LBE3:
+  54              		.loc 1 36 5
+  55 000a 97000000 		call	__disable_irq
+  55      E7800000 
+  56              	.LVL2:
+  37:../src/platform/hal/hal_irq.c ****     return(psr);
+  57              		.loc 1 37 5
+  38:../src/platform/hal/hal_irq.c **** }
+  58              		.loc 1 38 1 is_stmt 0
+  59 0012 E260     		ld	ra,24(sp)
+  60              		.cfi_restore 1
+  61 0014 2265     		ld	a0,8(sp)
+  62 0016 0561     		addi	sp,sp,32
+  63              		.cfi_def_cfa_offset 0
+  64              	.LVL3:
+  65 0018 8280     		jr	ra
+  66              		.cfi_endproc
+  67              	.LFE6:
+  69              		.section	.text.HAL_restore_interrupts,"ax",@progbits
+  70              		.align	1
+  71              		.globl	HAL_restore_interrupts
+  73              	HAL_restore_interrupts:
+  74              	.LFB7:
+  39:../src/platform/hal/hal_irq.c **** 
+  40:../src/platform/hal/hal_irq.c **** /*------------------------------------------------------------------------------
+  41:../src/platform/hal/hal_irq.c ****  * 
+  42:../src/platform/hal/hal_irq.c ****  */
+  43:../src/platform/hal/hal_irq.c **** void HAL_restore_interrupts(psr_t saved_psr) {
+  75              		.loc 1 43 46 is_stmt 1
+  76              		.cfi_startproc
+  77              	.LVL4:
+  44:../src/platform/hal/hal_irq.c ****     write_csr(mstatus, saved_psr);
+  78              		.loc 1 44 5
+  79              	 #APP
+  80              	# 44 "../src/platform/hal/hal_irq.c" 1
+  45              	}
+  81              		csrw mstatus, a0
+  82              	# 0 "" 2
+  83              		.loc 1 45 1 is_stmt 0
+  84              	 #NO_APP
+  85 0004 8280     		ret
+  86              		.cfi_endproc
+  87              	.LFE7:
+  89              		.text
+  90              	.Letext0:
+  91              		.file 2 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/lib
+  92              		.file 3 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/ris
+  93              		.file 4 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/ris
+  94              		.file 5 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/ris
+  95              		.file 6 "/home/vinay/Desktop/softconsole_watershed/Water-shed/src/platform/hal/cpu_types.h"
+  96              		.file 7 "/home/vinay/Desktop/softconsole_watershed/Water-shed/src/platform/mpfs_hal/common/mss_uti
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hal_irq.c
+     /tmp/ccXvUAb0.s:13     .text.HAL_enable_interrupts:0000000000000000 HAL_enable_interrupts
+     /tmp/ccXvUAb0.s:17     .text.HAL_enable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:18     .text.HAL_enable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:19     .text.HAL_enable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:21     .text.HAL_enable_interrupts:0000000000000008 .L0 
+     /tmp/ccXvUAb0.s:28     .text.HAL_disable_interrupts:0000000000000000 HAL_disable_interrupts
+     /tmp/ccXvUAb0.s:31     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:32     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:33     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:35     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:36     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:38     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:39     .text.HAL_disable_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:40     .text.HAL_disable_interrupts:0000000000000002 .L0 
+     /tmp/ccXvUAb0.s:42     .text.HAL_disable_interrupts:0000000000000004 .L0 
+../src/platform/hal/hal_irq.c:35     .text.HAL_disable_interrupts:0000000000000004 .L0 
+     /tmp/ccXvUAb0.s:54     .text.HAL_disable_interrupts:000000000000000a .L0 
+     /tmp/ccXvUAb0.s:55     .text.HAL_disable_interrupts:000000000000000a .L0 
+     /tmp/ccXvUAb0.s:58     .text.HAL_disable_interrupts:0000000000000012 .L0 
+     /tmp/ccXvUAb0.s:59     .text.HAL_disable_interrupts:0000000000000012 .L0 
+     /tmp/ccXvUAb0.s:60     .text.HAL_disable_interrupts:0000000000000014 .L0 
+     /tmp/ccXvUAb0.s:63     .text.HAL_disable_interrupts:0000000000000018 .L0 
+     /tmp/ccXvUAb0.s:66     .text.HAL_disable_interrupts:000000000000001a .L0 
+     /tmp/ccXvUAb0.s:73     .text.HAL_restore_interrupts:0000000000000000 HAL_restore_interrupts
+     /tmp/ccXvUAb0.s:76     .text.HAL_restore_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:78     .text.HAL_restore_interrupts:0000000000000000 .L0 
+../src/platform/hal/hal_irq.c:44     .text.HAL_restore_interrupts:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:85     .text.HAL_restore_interrupts:0000000000000004 .L0 
+     /tmp/ccXvUAb0.s:86     .text.HAL_restore_interrupts:0000000000000006 .L0 
+     /tmp/ccXvUAb0.s:24     .text.HAL_enable_interrupts:0000000000000008 .L0 
+     /tmp/ccXvUAb0.s:69     .text.HAL_disable_interrupts:000000000000001a .L0 
+     /tmp/ccXvUAb0.s:89     .text.HAL_restore_interrupts:0000000000000006 .L0 
+                     .debug_frame:0000000000000000 .L0 
+     /tmp/ccXvUAb0.s:1368   .debug_abbrev:0000000000000000 .Ldebug_abbrev0
+     /tmp/ccXvUAb0.s:2080   .debug_str:00000000000002e8 .LASF128
+     /tmp/ccXvUAb0.s:2086   .debug_str:00000000000003ce .LASF129
+     /tmp/ccXvUAb0.s:2096   .debug_str:000000000000040d .LASF130
+     /tmp/ccXvUAb0.s:1916   .debug_ranges:0000000000000000 .Ldebug_ranges0
+     /tmp/ccXvUAb0.s:1932   .debug_line:0000000000000000 .Ldebug_line0
+     /tmp/ccXvUAb0.s:1962   .debug_str:00000000000000aa .LASF0
+     /tmp/ccXvUAb0.s:2154   .debug_str:000000000000054f .LASF1
+     /tmp/ccXvUAb0.s:2090   .debug_str:00000000000003f2 .LASF2
+     /tmp/ccXvUAb0.s:2040   .debug_str:000000000000021b .LASF3
+     /tmp/ccXvUAb0.s:2024   .debug_str:00000000000001bb .LASF4
+     /tmp/ccXvUAb0.s:1978   .debug_str:00000000000000ef .LASF5
+     /tmp/ccXvUAb0.s:2034   .debug_str:00000000000001f5 .LASF6
+     /tmp/ccXvUAb0.s:1960   .debug_str:000000000000009c .LASF7
+     /tmp/ccXvUAb0.s:2062   .debug_str:0000000000000281 .LASF8
+     /tmp/ccXvUAb0.s:2050   .debug_str:0000000000000255 .LASF9
+     /tmp/ccXvUAb0.s:2074   .debug_str:00000000000002ca .LASF10
+     /tmp/ccXvUAb0.s:2134   .debug_str:00000000000004f5 .LASF11
+     /tmp/ccXvUAb0.s:2174   .debug_str:00000000000005af .LASF12
+     /tmp/ccXvUAb0.s:2048   .debug_str:000000000000024f .LASF13
+     /tmp/ccXvUAb0.s:2026   .debug_str:00000000000001c8 .LASF14
+     /tmp/ccXvUAb0.s:2126   .debug_str:00000000000004d3 .LASF15
+     /tmp/ccXvUAb0.s:2128   .debug_str:00000000000004db .LASF16
+     /tmp/ccXvUAb0.s:2100   .debug_str:0000000000000455 .LASF17
+     /tmp/ccXvUAb0.s:2160   .debug_str:000000000000056c .LASF18
+     /tmp/ccXvUAb0.s:2084   .debug_str:00000000000003bc .LASF19
+     /tmp/ccXvUAb0.s:2006   .debug_str:0000000000000166 .LASF20
+     /tmp/ccXvUAb0.s:2010   .debug_str:0000000000000177 .LASF25
+     /tmp/ccXvUAb0.s:2146   .debug_str:0000000000000527 .LASF21
+     /tmp/ccXvUAb0.s:2120   .debug_str:00000000000004be .LASF22
+     /tmp/ccXvUAb0.s:2002   .debug_str:000000000000015a .LASF23
+     /tmp/ccXvUAb0.s:2168   .debug_str:000000000000059a .LASF24
+     /tmp/ccXvUAb0.s:2020   .debug_str:00000000000001a4 .LASF26
+     /tmp/ccXvUAb0.s:1958   .debug_str:0000000000000093 .LASF27
+     /tmp/ccXvUAb0.s:2140   .debug_str:0000000000000509 .LASF28
+     /tmp/ccXvUAb0.s:1968   .debug_str:00000000000000c2 .LASF29
+     /tmp/ccXvUAb0.s:2200   .debug_str:000000000000064a .LASF30
+     /tmp/ccXvUAb0.s:2068   .debug_str:00000000000002ae .LASF31
+     /tmp/ccXvUAb0.s:2058   .debug_str:0000000000000271 .LASF32
+     /tmp/ccXvUAb0.s:2170   .debug_str:000000000000059f .LASF33
+     /tmp/ccXvUAb0.s:2092   .debug_str:00000000000003fc .LASF34
+     /tmp/ccXvUAb0.s:2184   .debug_str:00000000000005e9 .LASF35
+     /tmp/ccXvUAb0.s:1972   .debug_str:00000000000000d1 .LASF36
+     /tmp/ccXvUAb0.s:1998   .debug_str:000000000000014d .LASF37
+     /tmp/ccXvUAb0.s:1934   .debug_str:0000000000000000 .LASF38
+     /tmp/ccXvUAb0.s:2150   .debug_str:000000000000053a .LASF39
+     /tmp/ccXvUAb0.s:1984   .debug_str:0000000000000106 .LASF40
+     /tmp/ccXvUAb0.s:2070   .debug_str:00000000000002b7 .LASF41
+     /tmp/ccXvUAb0.s:2112   .debug_str:000000000000048e .LASF42
+     /tmp/ccXvUAb0.s:2000   .debug_str:0000000000000155 .LASF43
+     /tmp/ccXvUAb0.s:2022   .debug_str:00000000000001a9 .LASF44
+     /tmp/ccXvUAb0.s:2094   .debug_str:0000000000000406 .LASF45
+     /tmp/ccXvUAb0.s:1966   .debug_str:00000000000000bc .LASF46
+     /tmp/ccXvUAb0.s:1936   .debug_str:000000000000000c .LASF47
+     /tmp/ccXvUAb0.s:2036   .debug_str:0000000000000207 .LASF48
+     /tmp/ccXvUAb0.s:1982   .debug_str:00000000000000ff .LASF49
+     /tmp/ccXvUAb0.s:2166   .debug_str:0000000000000594 .LASF50
+     /tmp/ccXvUAb0.s:1950   .debug_str:0000000000000062 .LASF51
+     /tmp/ccXvUAb0.s:1942   .debug_str:0000000000000025 .LASF52
+     /tmp/ccXvUAb0.s:2122   .debug_str:00000000000004c6 .LASF53
+     /tmp/ccXvUAb0.s:2136   .debug_str:00000000000004fd .LASF54
+     /tmp/ccXvUAb0.s:1986   .debug_str:000000000000010e .LASF55
+     /tmp/ccXvUAb0.s:2028   .debug_str:00000000000001cf .LASF56
+     /tmp/ccXvUAb0.s:2008   .debug_str:000000000000016f .LASF57
+     /tmp/ccXvUAb0.s:2110   .debug_str:0000000000000489 .LASF58
+     /tmp/ccXvUAb0.s:1940   .debug_str:000000000000001a .LASF59
+     /tmp/ccXvUAb0.s:2072   .debug_str:00000000000002bf .LASF60
+     /tmp/ccXvUAb0.s:2118   .debug_str:00000000000004a5 .LASF61
+     /tmp/ccXvUAb0.s:2114   .debug_str:0000000000000493 .LASF62
+     /tmp/ccXvUAb0.s:2116   .debug_str:000000000000049b .LASF63
+     /tmp/ccXvUAb0.s:2012   .debug_str:000000000000017f .LASF64
+     /tmp/ccXvUAb0.s:2030   .debug_str:00000000000001d7 .LASF65
+     /tmp/ccXvUAb0.s:1990   .debug_str:000000000000011e .LASF66
+     /tmp/ccXvUAb0.s:2192   .debug_str:000000000000061b .LASF67
+     /tmp/ccXvUAb0.s:2186   .debug_str:00000000000005f4 .LASF68
+     /tmp/ccXvUAb0.s:2044   .debug_str:000000000000023a .LASF69
+     /tmp/ccXvUAb0.s:2178   .debug_str:00000000000005c2 .LASF70
+     /tmp/ccXvUAb0.s:1976   .debug_str:00000000000000e7 .LASF71
+     /tmp/ccXvUAb0.s:1970   .debug_str:00000000000000cc .LASF72
+     /tmp/ccXvUAb0.s:2060   .debug_str:000000000000027b .LASF73
+     /tmp/ccXvUAb0.s:2042   .debug_str:000000000000022e .LASF74
+     /tmp/ccXvUAb0.s:2102   .debug_str:0000000000000460 .LASF75
+     /tmp/ccXvUAb0.s:1974   .debug_str:00000000000000df .LASF76
+     /tmp/ccXvUAb0.s:2016   .debug_str:0000000000000194 .LASF77
+     /tmp/ccXvUAb0.s:2056   .debug_str:000000000000026a .LASF78
+     /tmp/ccXvUAb0.s:2130   .debug_str:00000000000004e3 .LASF79
+     /tmp/ccXvUAb0.s:2188   .debug_str:0000000000000603 .LASF80
+     /tmp/ccXvUAb0.s:1964   .debug_str:00000000000000b6 .LASF81
+     /tmp/ccXvUAb0.s:2180   .debug_str:00000000000005cc .LASF82
+     /tmp/ccXvUAb0.s:1988   .debug_str:0000000000000115 .LASF83
+     /tmp/ccXvUAb0.s:1992   .debug_str:0000000000000126 .LASF84
+     /tmp/ccXvUAb0.s:2052   .debug_str:000000000000025c .LASF85
+     /tmp/ccXvUAb0.s:2104   .debug_str:0000000000000468 .LASF86
+     /tmp/ccXvUAb0.s:2054   .debug_str:0000000000000262 .LASF87
+     /tmp/ccXvUAb0.s:2138   .debug_str:0000000000000504 .LASF88
+     /tmp/ccXvUAb0.s:2098   .debug_str:000000000000044e .LASF89
+     /tmp/ccXvUAb0.s:2172   .debug_str:00000000000005a9 .LASF90
+     /tmp/ccXvUAb0.s:2038   .debug_str:0000000000000214 .LASF91
+     /tmp/ccXvUAb0.s:2088   .debug_str:00000000000003ec .LASF92
+     /tmp/ccXvUAb0.s:1938   .debug_str:0000000000000012 .LASF93
+     /tmp/ccXvUAb0.s:2124   .debug_str:00000000000004cd .LASF94
+     /tmp/ccXvUAb0.s:2144   .debug_str:0000000000000521 .LASF95
+     /tmp/ccXvUAb0.s:2158   .debug_str:0000000000000567 .LASF96
+     /tmp/ccXvUAb0.s:2106   .debug_str:0000000000000471 .LASF97
+     /tmp/ccXvUAb0.s:1948   .debug_str:000000000000004b .LASF98
+     /tmp/ccXvUAb0.s:1980   .debug_str:00000000000000f8 .LASF99
+     /tmp/ccXvUAb0.s:2046   .debug_str:0000000000000247 .LASF100
+     /tmp/ccXvUAb0.s:2018   .debug_str:000000000000019a .LASF101
+     /tmp/ccXvUAb0.s:2198   .debug_str:0000000000000645 .LASF102
+     /tmp/ccXvUAb0.s:2078   .debug_str:00000000000002de .LASF103
+     /tmp/ccXvUAb0.s:2152   .debug_str:0000000000000543 .LASF104
+     /tmp/ccXvUAb0.s:2148   .debug_str:000000000000052d .LASF105
+     /tmp/ccXvUAb0.s:2108   .debug_str:000000000000047c .LASF106
+     /tmp/ccXvUAb0.s:1956   .debug_str:0000000000000085 .LASF107
+     /tmp/ccXvUAb0.s:2196   .debug_str:0000000000000637 .LASF108
+     /tmp/ccXvUAb0.s:2176   .debug_str:00000000000005b8 .LASF109
+     /tmp/ccXvUAb0.s:2162   .debug_str:0000000000000574 .LASF110
+     /tmp/ccXvUAb0.s:1996   .debug_str:000000000000013f .LASF111
+     /tmp/ccXvUAb0.s:1954   .debug_str:0000000000000076 .LASF112
+     /tmp/ccXvUAb0.s:1994   .debug_str:000000000000012e .LASF113
+     /tmp/ccXvUAb0.s:1944   .debug_str:000000000000002b .LASF114
+     /tmp/ccXvUAb0.s:1946   .debug_str:000000000000003a .LASF115
+     /tmp/ccXvUAb0.s:1952   .debug_str:000000000000006b .LASF131
+     /tmp/ccXvUAb0.s:2064   .debug_str:000000000000028d .LASF116
+     /tmp/ccXvUAb0.s:2066   .debug_str:000000000000029d .LASF117
+     /tmp/ccXvUAb0.s:2190   .debug_str:000000000000060a .LASF118
+     /tmp/ccXvUAb0.s:2132   .debug_str:00000000000004e9 .LASF119
+     /tmp/ccXvUAb0.s:2164   .debug_str:0000000000000581 .LASF120
+     /tmp/ccXvUAb0.s:2142   .debug_str:0000000000000512 .LASF121
+     /tmp/ccXvUAb0.s:2014   .debug_str:000000000000018e .LASF122
+     /tmp/ccXvUAb0.s:2182   .debug_str:00000000000005d2 .LASF124
+     /tmp/ccXvUAb0.s:74     .text.HAL_restore_interrupts:0000000000000000 .LFB7
+     /tmp/ccXvUAb0.s:87     .text.HAL_restore_interrupts:0000000000000006 .LFE7
+     /tmp/ccXvUAb0.s:2156   .debug_str:000000000000055d .LASF132
+     /tmp/ccXvUAb0.s:2194   .debug_str:0000000000000620 .LASF133
+     /tmp/ccXvUAb0.s:29     .text.HAL_disable_interrupts:0000000000000000 .LFB6
+     /tmp/ccXvUAb0.s:67     .text.HAL_disable_interrupts:000000000000001a .LFE6
+     /tmp/ccXvUAb0.s:1882   .debug_loc:0000000000000000 .LLST0
+     /tmp/ccXvUAb0.s:2004   .debug_str:0000000000000160 .LASF123
+     /tmp/ccXvUAb0.s:56     .text.HAL_disable_interrupts:0000000000000012 .LVL2
+     /tmp/ccXvUAb0.s:2032   .debug_str:00000000000001df .LASF125
+     /tmp/ccXvUAb0.s:14     .text.HAL_enable_interrupts:0000000000000000 .LFB5
+     /tmp/ccXvUAb0.s:22     .text.HAL_enable_interrupts:0000000000000008 .LFE5
+     /tmp/ccXvUAb0.s:20     .text.HAL_enable_interrupts:0000000000000008 .LVL0
+     /tmp/ccXvUAb0.s:2082   .debug_str:00000000000003ae .LASF126
+     /tmp/ccXvUAb0.s:2076   .debug_str:00000000000002d1 .LASF127
+     /tmp/ccXvUAb0.s:51     .text.HAL_disable_interrupts:000000000000000a .LVL1
+     /tmp/ccXvUAb0.s:64     .text.HAL_disable_interrupts:0000000000000018 .LVL3
+     /tmp/ccXvUAb0.s:98     .debug_info:0000000000000000 .Ldebug_info0
+     /tmp/ccXvUAb0.s:34     .text.HAL_disable_interrupts:0000000000000000 .LBB2
+     /tmp/ccXvUAb0.s:37     .text.HAL_disable_interrupts:0000000000000000 .LBE2
+     /tmp/ccXvUAb0.s:43     .text.HAL_disable_interrupts:0000000000000004 .LBB3
+     /tmp/ccXvUAb0.s:53     .text.HAL_disable_interrupts:000000000000000a .LBE3
+
+UNDEFINED SYMBOLS
+__enable_irq
+__disable_irq

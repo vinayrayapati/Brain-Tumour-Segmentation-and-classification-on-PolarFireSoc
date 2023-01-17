@@ -1,0 +1,6 @@
+
+16:14:14 DEBUG - Looking for ELF file in the work directory.
+16:14:14 DEBUG - ELF file found: "Water-shed.elf".
+16:14:14 INFO  - Selected boot mode "1 - non-secure boot from eNVM" and working in directory "/home/vinay/Desktop/softconsole_watershed/Water-shed/LIM-Release".
+16:14:14 DEBUG - Workdir=/home/vinay/Desktop/softconsole_watershed/Water-shed/LIM-Release die=MPFS250T_ES diePackage=FCVG484 bm=1 - non-secure boot from eNVM verify=false elf=Water-shed.elf
+16:14:14 ERROR - Failed to detect fpgenprog in various locations. Please set the FPGENPROG environment variable to fully qualified fpgenprog executable path. fpgenprog should be located in your Program Debug Tool or Libero SoC installation.

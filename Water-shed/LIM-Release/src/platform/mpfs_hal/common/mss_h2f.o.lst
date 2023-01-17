@@ -1,0 +1,1063 @@
+   1              		.file	"mss_h2f.c"
+   2              		.option nopic
+   3              		.attribute arch, "rv64i2p0_m2p0_a2p0_f2p0_d2p0_c2p0"
+   4              		.attribute unaligned_access, 0
+   5              		.attribute stack_align, 16
+   6              		.text
+   7              	.Ltext0:
+   8              		.cfi_sections	.debug_frame
+   9              		.section	.text.reset_m2f,"ax",@progbits
+  10              		.align	1
+  11              		.globl	reset_m2f
+  13              	reset_m2f:
+  14              	.LFB12:
+  15              		.file 1 "../src/platform/mpfs_hal/common/mss_h2f.c"
+   1:../src/platform/mpfs_hal/common/mss_h2f.c **** /*******************************************************************************
+   2:../src/platform/mpfs_hal/common/mss_h2f.c ****  * Copyright 2019-2022 Microchip FPGA Embedded Systems Solutions.
+   3:../src/platform/mpfs_hal/common/mss_h2f.c ****  *
+   4:../src/platform/mpfs_hal/common/mss_h2f.c ****  * SPDX-License-Identifier: MIT
+   5:../src/platform/mpfs_hal/common/mss_h2f.c ****  *
+   6:../src/platform/mpfs_hal/common/mss_h2f.c ****  * MPFS HAL Embedded Software
+   7:../src/platform/mpfs_hal/common/mss_h2f.c ****  *
+   8:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+   9:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  10:../src/platform/mpfs_hal/common/mss_h2f.c **** /*******************************************************************************
+  11:../src/platform/mpfs_hal/common/mss_h2f.c ****  *
+  12:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @file mss_m2f.c
+  13:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @author Microchip-FPGA Embedded Systems Solutions
+  14:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @brief M2F access data structures and functions.
+  15:../src/platform/mpfs_hal/common/mss_h2f.c ****  *
+  16:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+  17:../src/platform/mpfs_hal/common/mss_h2f.c **** #include "mss_plic.h"
+  18:../src/platform/mpfs_hal/common/mss_h2f.c **** #include "mss_h2f.h"
+  19:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  20:../src/platform/mpfs_hal/common/mss_h2f.c **** #ifdef __cplusplus
+  21:../src/platform/mpfs_hal/common/mss_h2f.c **** extern "C" {
+  22:../src/platform/mpfs_hal/common/mss_h2f.c **** #endif
+  23:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  24:../src/platform/mpfs_hal/common/mss_h2f.c **** #define M2F_MAPPING_INVALID 255U
+  25:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  26:../src/platform/mpfs_hal/common/mss_h2f.c **** /*==============================================================================
+  27:../src/platform/mpfs_hal/common/mss_h2f.c ****  * M2F_int_mapping, source to M2F output lines
+  28:../src/platform/mpfs_hal/common/mss_h2f.c ****  * The internal interrupt are multiplexed to fabric I/O lines.
+  29:../src/platform/mpfs_hal/common/mss_h2f.c ****  * That is, each line will contain several interrupts.
+  30:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+  31:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  32:../src/platform/mpfs_hal/common/mss_h2f.c **** const uint8_t M2F_int_mapping[PLIC_U54_4_BUS_ERROR_UNIT_OFFSET]= { \
+  33:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  34:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*INVALID_IRQn              = 0*/, \
+  35:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*L2_METADATA_CORR_IRQn     = 1*/, \
+  36:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*L2_METADAT_UNCORR_IRQn    = 2*/, \
+  37:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*L2_DATA_CORR_IRQn         = 3*/, \
+  38:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*L2_DATA_UNCORR_IRQn       = 4*/, \
+  39:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH0_DONE_IRQn         = 5*/, \
+  40:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH0_ERR_IRQn          = 6*/, \
+  41:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH1_DONE_IRQn         = 7*/, \
+  42:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH1_ERR_IRQn          = 8*/, \
+  43:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH2_DONE_IRQn         = 9*/, \
+  44:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH2_ERR_IRQn          = 10*/, \
+  45:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH3_DONE_IRQn         = 11*/, \
+  46:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*DMA_CH3_ERR_IRQn          = 12*/, \
+  47:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  48:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT0_or_GPIO2_BIT0_PLIC_0          = 0 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  49:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT1_or_GPIO2_BIT1_PLIC_1          = 1 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  50:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT2_or_GPIO2_BIT2_PLIC_2          = 2 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  51:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT3_or_GPIO2_BIT3_PLIC_3          = 3 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  52:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT4_or_GPIO2_BIT4_PLIC_4          = 4 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  53:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT5_or_GPIO2_BIT5_PLIC_5          = 5 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  54:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT6_or_GPIO2_BIT6_PLIC_6          = 6 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  55:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT7_or_GPIO2_BIT7_PLIC_7          = 7 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  56:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT8_or_GPIO2_BIT8_PLIC_8          = 8 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  57:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT9_or_GPIO2_BIT9_PLIC_9          = 9 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  58:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT10_or_GPIO2_BIT10_PLIC_10       = 10 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  59:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT11_or_GPIO2_BIT11_PLIC_11       = 11 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  60:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT12_or_GPIO2_BIT12_PLIC_12       = 12 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  61:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  62:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_BIT14_or_GPIO2_BIT13_PLIC_13       = 13 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  63:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT0_or_GPIO2_BIT14_PLIC_14        = 14 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  64:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT1_or_GPIO2_BIT15_PLIC_15        = 15 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  65:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT2_or_GPIO2_BIT16_PLIC_16        = 16 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  66:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT3_or_GPIO2_BIT17_PLIC_17        = 17 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  67:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT4_or_GPIO2_BIT18_PLIC_18        = 18 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  68:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT5_or_GPIO2_BIT19_PLIC_19        = 19 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  69:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT6_or_GPIO2_BIT20_PLIC_20        = 20 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  70:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT7_or_GPIO2_BIT21_PLIC_21        = 21 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  71:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT8_or_GPIO2_BIT22_PLIC_22        = 22 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  72:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT9_or_GPIO2_BIT23_PLIC_23        = 23 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  73:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT10_or_GPIO2_BIT24_PLIC_24       = 24 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  74:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT11_or_GPIO2_BIT25_PLIC_25       = 25 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  75:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT12_or_GPIO2_BIT26_PLIC_26       = 26 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  76:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT13_or_GPIO2_BIT27_PLIC_27       = 27 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  77:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  78:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT14_or_GPIO2_BIT28_PLIC_28       = 28 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  79:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT15_or_GPIO2_BIT29_PLIC_29       = 29 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  80:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT16_or_GPIO2_BIT30_PLIC_30       = 30 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  81:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT17_or_GPIO2_BIT31_PLIC_31       = 31 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  82:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  83:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT18_PLIC_32 = 32 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  84:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT19_PLIC_33                      = 33 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  85:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT20_PLIC_34                      = 34 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  86:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT21_PLIC_35                      = 35 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  87:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT22_PLIC_36                      = 36 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  88:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_BIT23_PLIC_37                      = 37 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  89:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  90:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO0_NON_DIRECT_PLI                     =38 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  91:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO1_NON_DIRECT_PLIC                    =39 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  92:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x00U /*GPIO2_NON_DIRECT_PLIC                    =40 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  93:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  94:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*SPI0_PLIC                                =41 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  95:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*SPI1_PLIC                                =42 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  96:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*CAN0_PLIC                                =43 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  97:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*CAN1_PLIC                                =44 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  98:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C0_MAIN_PLIC                           =45 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+  99:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C0_ALERT_PLIC                          =46 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 100:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C0_SUS_PLIC                            =47 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 101:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C1_MAIN_PLIC                           =48 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 102:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C1_ALERT_PLIC                          =49 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 103:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x02U /*I2C1_SUS_PLIC                            =50 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 104:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_INT_PLIC                            =51 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 105:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_QUEUE1_PLIC                         =52 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 106:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_QUEUE2_PLIC                         =53 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 107:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_QUEUE3_PLIC                         =54 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 108:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_eMAC_PLIC                           =55 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 109:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x03U /*MAC0_MMSL_PLIC                           =56 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 110:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_int_PLIC                            =57 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 111:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_QUEUE1_PLIC                         =58 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 112:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_QUEUE2_PLIC                         =59 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 113:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_QUEUE3_PLIC                         =60 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 114:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_EMAC_PLIC                           =61 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 115:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x04U /*MAC1_MMSL_PLIC                           =62 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 116:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x09U /*DDRC_TRAIN_PLIC                          =63 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 117:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x07U /*SCB_INTERRUPT_PLIC                       =64 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 118:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x06U /*ECC_ERROR_PLIC                           =65 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 119:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x06U /*ECC_CORRECT_PLIC                         =66 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 120:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*RTC_WAKEUP_PLIC                          =67 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 121:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*RTC_MATCH_PLIC                           =68 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 122:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0CU /*TIMER1_PLIC                              =69 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 123:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0CU /*TIMER2_PLIC                              =70 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 124:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0DU /*ENVM_PLIC                                =71 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 125:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0DU /*QSPI_PLIC                                =72 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 126:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0EU /*USB_DMA_PLIC                             =73 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 127:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0EU /*USB_MC_PLIC                              =74 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 128:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0FU /*MMC_main_PLIC                            =75 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 129:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0FU /*MMC_wakeup_PLIC                          =76 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 130:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*MMUART0_PLIC_77                          =77 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 131:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*MMUART1_PLIC                             =78 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 132:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*MMUART2_PLIC                             =79 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 133:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*MMUART3_PLIC                             =80 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 134:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x01U /*MMUART4_PLIC                             =81 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 135:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0AU /*G5C_DEVRST_PLIC                          =82 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 136:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x08U /*g5c_MESSAGE_PLIC                         =83 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 137:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*USOC_VC_INTERRUPT_PLIC                   =84 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 138:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*USOC_SMB_INTERRUPT_PLIC                  =85 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 139:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x06U /*E51_0_MAINTENACE_PLIC                    =86 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 140:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG0_MRVP_PLIC                          =87 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 141:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG1_MRVP_PLIC                          =88 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 142:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG2_MRVP_PLIC                          =89 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 143:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG3_MRVP_PLIC                          =90 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 144:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG4_MRVP_PLIC                          =91 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 145:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG0_TOUT_PLIC                          =92 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 146:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG1_TOUT_PLIC                          =93 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 147:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG2_TOUT_PLIC                          =94 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 148:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG3_TOUT_PLIC                          =95 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 149:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x05U /*WDOG4_TOUT_PLIC                          =96 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 150:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0DU /*G5C_MSS_SPI_PLIC                         =97 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 151:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*VOLT_TEMP_ALARM_PLIC      =98 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 152:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*ATHENA_COMPLETE_PLIC      =99 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 153:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*ATHENA_ALARM_PLIC         =100 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 154:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*ATHENA_BUS_ERROR_PLIC     =101 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 155:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*USOC_AXIC_US_PLIC                        =102 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 156:../src/platform/mpfs_hal/common/mss_h2f.c ****     0x0BU /*USOC_AXIC_DS_PLIC                        =103 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 157:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 158:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_0_PLIC        = 105 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 159:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_1_PLIC        = 106 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 160:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_2_PLIC        = 107 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 161:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_3_PLIC        = 108 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 162:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_4_PLIC        = 109 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 163:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_5_PLIC        = 110 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 164:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_6_PLIC        = 111 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 165:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_7_PLIC        = 112 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 166:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_8_PLIC        = 113 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 167:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_9_PLIC        = 114 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 168:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 169:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_10_PLIC        = 115 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 170:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_11_PLIC        = 116 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 171:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_12_PLIC        = 117 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 172:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_13_PLIC        = 118 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 173:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_14_PLIC        = 119 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 174:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_15_PLIC        = 120 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 175:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_16_PLIC        = 121 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 176:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_17_PLIC        = 122 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 177:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_18_PLIC        = 123 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 178:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_19_PLIC        = 124 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 179:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 180:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_20_PLIC        = 125 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 181:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_21_PLIC        = 126 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 182:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_22_PLIC        = 127 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 183:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_23_PLIC        = 128 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 184:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_24_PLIC        = 129 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 185:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_25_PLIC        = 130 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 186:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_26_PLIC        = 131 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 187:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_27_PLIC        = 132 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 188:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_28_PLIC        = 133 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 189:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_29_PLIC        = 134 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 190:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 191:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_30_PLIC        = 135 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 192:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_31_PLIC        = 136 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 193:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 194:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_32_PLIC        = 137 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 195:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_33_PLIC        = 138 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 196:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_34_PLIC        = 139 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 197:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_35_PLIC        = 140 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 198:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_36_PLIC        = 141 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 199:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_37_PLIC        = 142 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 200:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_38_PLIC        = 143 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 201:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_39_PLIC        = 144 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 202:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_40_PLIC        = 145 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 203:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_41_PLIC        = 146 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 204:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 205:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_42_PLIC        = 147 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 206:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_43_PLIC        = 148 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 207:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_44_PLIC        = 149 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 208:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_45_PLIC        = 150 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 209:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_46_PLIC        = 151 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 210:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_47_PLIC        = 152 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 211:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_48_PLIC        = 153 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 212:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_49_PLIC        = 154 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 213:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_50_PLIC        = 155 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 214:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_51_PLIC        = 156 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 215:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 216:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_52_PLIC        = 157 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 217:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_53_PLIC        = 158 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 218:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_54_PLIC        = 159 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 219:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_55_PLIC        = 160 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 220:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_56_PLIC        = 161 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 221:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_57_PLIC        = 162 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 222:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_58_PLIC        = 163 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 223:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_59_PLIC        = 164 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 224:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_60_PLIC        = 165 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 225:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_61_PLIC        = 166 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 226:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 227:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_62_PLIC        = 167 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 228:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*MSS_INT_F2M_63_PLIC        = 168 + OFFSET_TO_MSS_GLOBAL_INTS*/, \
+ 229:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 230:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*BUS_ERROR_UNIT_HART_0    = 182*/, \
+ 231:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*BUS_ERROR_UNIT_HART_1    = 183*/, \
+ 232:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*BUS_ERROR_UNIT_HART_2    = 184*/, \
+ 233:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*BUS_ERROR_UNIT_HART_3    = 185*/, \
+ 234:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_MAPPING_INVALID /*BUS_ERROR_UNIT_HART_4    = 186 */
+ 235:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 236:../src/platform/mpfs_hal/common/mss_h2f.c **** };
+ 237:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 238:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 239:../src/platform/mpfs_hal/common/mss_h2f.c **** /**
+ 240:../src/platform/mpfs_hal/common/mss_h2f.c ****  * get source to fabric signal mapping
+ 241:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @param source_int
+ 242:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @return
+ 243:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+ 244:../src/platform/mpfs_hal/common/mss_h2f.c **** static uint32_t get_corresponding_m2f_output(uint32_t source_int)
+ 245:../src/platform/mpfs_hal/common/mss_h2f.c **** {
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c ****     uint32_t m2f_line = M2F_int_mapping[source_int];
+ 247:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 248:../src/platform/mpfs_hal/common/mss_h2f.c ****     if(m2f_line < M2F_MAPPING_INVALID) /* if no error */
+ 249:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 250:../src/platform/mpfs_hal/common/mss_h2f.c ****         return(0x01U << m2f_line);
+ 251:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 252:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 253:../src/platform/mpfs_hal/common/mss_h2f.c ****     return(m2f_line);
+ 254:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 255:../src/platform/mpfs_hal/common/mss_h2f.c **** }
+ 256:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 257:../src/platform/mpfs_hal/common/mss_h2f.c **** /**
+ 258:../src/platform/mpfs_hal/common/mss_h2f.c ****  * set M2F controller to reset to defaults- disabled
+ 259:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+ 260:../src/platform/mpfs_hal/common/mss_h2f.c **** void reset_m2f(void)
+ 261:../src/platform/mpfs_hal/common/mss_h2f.c **** {
+  16              		.loc 1 261 1
+  17              		.cfi_startproc
+ 262:../src/platform/mpfs_hal/common/mss_h2f.c ****     uint8_t index = 0U;
+  18              		.loc 1 262 5
+  19              	.LVL0:
+ 263:../src/platform/mpfs_hal/common/mss_h2f.c ****     M2F_CONTROLLER->ENABLE = 0U;
+  20              		.loc 1 263 5
+  21              		.loc 1 263 28 is_stmt 0
+  22 0000 B7671220 		li	a5,538075136
+  23 0004 23A00700 		sw	zero,0(a5)
+ 264:../src/platform/mpfs_hal/common/mss_h2f.c ****     while(index < 4U)
+  24              		.loc 1 264 5 is_stmt 1
+ 265:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         M2F_CONTROLLER->PLENABLE[index] = 0U;
+  25              		.loc 1 266 9
+  26              		.loc 1 266 41 is_stmt 0
+  27 0008 23A00702 		sw	zero,32(a5)
+ 267:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  28              		.loc 1 267 9 is_stmt 1
+  29              	.LVL1:
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  30              		.loc 1 266 9
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  31              		.loc 1 266 41 is_stmt 0
+  32 000c 23A20702 		sw	zero,36(a5)
+  33              		.loc 1 267 9 is_stmt 1
+  34              	.LVL2:
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  35              		.loc 1 266 9
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  36              		.loc 1 266 41 is_stmt 0
+  37 0010 23A40702 		sw	zero,40(a5)
+  38              		.loc 1 267 9 is_stmt 1
+  39              	.LVL3:
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  40              		.loc 1 266 9
+ 266:../src/platform/mpfs_hal/common/mss_h2f.c ****         index++;
+  41              		.loc 1 266 41 is_stmt 0
+  42 0014 23A60702 		sw	zero,44(a5)
+  43              		.loc 1 267 9 is_stmt 1
+  44              	.LVL4:
+ 268:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 269:../src/platform/mpfs_hal/common/mss_h2f.c **** }
+  45              		.loc 1 269 1 is_stmt 0
+  46 0018 8280     		ret
+  47              		.cfi_endproc
+  48              	.LFE12:
+  50              		.section	.text.enable_m2f_int_output,"ax",@progbits
+  51              		.align	1
+  52              		.globl	enable_m2f_int_output
+  54              	enable_m2f_int_output:
+  55              	.LFB13:
+ 270:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 271:../src/platform/mpfs_hal/common/mss_h2f.c **** /**
+ 272:../src/platform/mpfs_hal/common/mss_h2f.c ****  * enables output which will mirror PLIC input. PLIC mapping given above for reference
+ 273:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @param source_int
+ 274:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+ 275:../src/platform/mpfs_hal/common/mss_h2f.c **** void enable_m2f_int_output(uint32_t source_int)
+ 276:../src/platform/mpfs_hal/common/mss_h2f.c **** {
+  56              		.loc 1 276 1 is_stmt 1
+  57              		.cfi_startproc
+  58              	.LVL5:
+ 277:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 278:../src/platform/mpfs_hal/common/mss_h2f.c ****     uint32_t output_signal = get_corresponding_m2f_output(source_int);
+  59              		.loc 1 278 5
+  60              	.LBB4:
+  61              	.LBB5:
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  62              		.loc 1 246 5
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  63              		.loc 1 246 40 is_stmt 0
+  64 0000 13170502 		slli	a4,a0,32
+  65 0004 0193     		srli	a4,a4,32
+  66 0006 97070000 		lla	a5,.LANCHOR0
+  66      93870700 
+  67 000e BA97     		add	a5,a5,a4
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+  68              		.loc 1 246 14
+  69 0010 03C80700 		lbu	a6,0(a5)
+  70              	.LVL6:
+ 248:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+  71              		.loc 1 248 5 is_stmt 1
+ 248:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+  72              		.loc 1 248 7 is_stmt 0
+  73 0014 9307F00F 		li	a5,255
+  74              	.LVL7:
+  75 0018 630BF802 		beq	a6,a5,.L2
+ 250:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+  76              		.loc 1 250 9 is_stmt 1
+  77              	.LVL8:
+  78              	.LBE5:
+  79              	.LBE4:
+ 279:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 280:../src/platform/mpfs_hal/common/mss_h2f.c ****     if(output_signal != M2F_MAPPING_INVALID)
+  80              		.loc 1 280 5
+ 281:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 282:../src/platform/mpfs_hal/common/mss_h2f.c ****         source_int -= OFFSET_TO_MSS_GLOBAL_INTS;
+  81              		.loc 1 282 9
+  82              		.loc 1 282 20 is_stmt 0
+  83 001c 4D35     		addiw	a0,a0,-13
+  84              	.LVL9:
+ 283:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 284:../src/platform/mpfs_hal/common/mss_h2f.c ****         /* enable the input */
+ 285:../src/platform/mpfs_hal/common/mss_h2f.c ****         M2F_CONTROLLER->PLENABLE[source_int/32U] |= (0x01U << (source_int % 32U));
+  85              		.loc 1 285 9 is_stmt 1
+  86 001e 9B565500 		srliw	a3,a0,5
+  87 0022 B7651220 		li	a1,538075136
+  88 0026 8A06     		slli	a3,a3,2
+  89 0028 AE96     		add	a3,a1,a3
+  90              		.loc 1 285 50 is_stmt 0
+  91 002a 9052     		lw	a2,32(a3)
+  92              		.loc 1 285 60
+  93 002c 0547     		li	a4,1
+  94              	.LVL10:
+  95 002e 3B15A700 		sllw	a0,a4,a0
+  96              	.LVL11:
+  97              		.loc 1 285 50
+  98 0032 518D     		or	a0,a2,a0
+  99 0034 0125     		sext.w	a0,a0
+ 100 0036 88D2     		sw	a0,32(a3)
+ 286:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 287:../src/platform/mpfs_hal/common/mss_h2f.c ****         /* enable the output */
+ 288:../src/platform/mpfs_hal/common/mss_h2f.c ****         M2F_CONTROLLER->ENABLE |= ((output_signal<<16U) | 0x01U);
+ 101              		.loc 1 288 9 is_stmt 1
+ 102              		.loc 1 288 32 is_stmt 0
+ 103 0038 9C41     		lw	a5,0(a1)
+ 104              	.LBB7:
+ 105              	.LBB6:
+ 250:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 106              		.loc 1 250 22
+ 107 003a 3B170701 		sllw	a4,a4,a6
+ 108              	.LBE6:
+ 109              	.LBE7:
+ 110              		.loc 1 288 50
+ 111 003e 1B170701 		slliw	a4,a4,16
+ 112              		.loc 1 288 32
+ 113 0042 8127     		sext.w	a5,a5
+ 114 0044 D98F     		or	a5,a5,a4
+ 115 0046 93E71700 		ori	a5,a5,1
+ 116 004a 8127     		sext.w	a5,a5
+ 117 004c 9CC1     		sw	a5,0(a1)
+ 118              	.LVL12:
+ 119              	.L2:
+ 289:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 290:../src/platform/mpfs_hal/common/mss_h2f.c **** }
+ 120              		.loc 1 290 1
+ 121 004e 8280     		ret
+ 122              		.cfi_endproc
+ 123              	.LFE13:
+ 125              		.section	.text.disable_m2f_int_output,"ax",@progbits
+ 126              		.align	1
+ 127              		.globl	disable_m2f_int_output
+ 129              	disable_m2f_int_output:
+ 130              	.LFB14:
+ 291:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 292:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 293:../src/platform/mpfs_hal/common/mss_h2f.c **** /**
+ 294:../src/platform/mpfs_hal/common/mss_h2f.c ****  * enables output which will mirror PLIC input. PLIC mapping given above for reference
+ 295:../src/platform/mpfs_hal/common/mss_h2f.c ****  * @param source_int
+ 296:../src/platform/mpfs_hal/common/mss_h2f.c ****  */
+ 297:../src/platform/mpfs_hal/common/mss_h2f.c **** void disable_m2f_int_output(uint32_t source_int)
+ 298:../src/platform/mpfs_hal/common/mss_h2f.c **** {
+ 131              		.loc 1 298 1 is_stmt 1
+ 132              		.cfi_startproc
+ 133              	.LVL13:
+ 299:../src/platform/mpfs_hal/common/mss_h2f.c ****     uint32_t output_signal = get_corresponding_m2f_output(source_int);
+ 134              		.loc 1 299 5
+ 135              	.LBB10:
+ 136              	.LBB11:
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 137              		.loc 1 246 5
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 138              		.loc 1 246 40 is_stmt 0
+ 139 0000 13170502 		slli	a4,a0,32
+ 140 0004 0193     		srli	a4,a4,32
+ 141 0006 97070000 		lla	a5,.LANCHOR0
+ 141      93870700 
+ 142 000e BA97     		add	a5,a5,a4
+ 246:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 143              		.loc 1 246 14
+ 144 0010 83C50700 		lbu	a1,0(a5)
+ 145              	.LVL14:
+ 248:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 146              		.loc 1 248 5 is_stmt 1
+ 248:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 147              		.loc 1 248 7 is_stmt 0
+ 148 0014 9307F00F 		li	a5,255
+ 149              	.LVL15:
+ 150 0018 6388F502 		beq	a1,a5,.L4
+ 250:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 151              		.loc 1 250 9 is_stmt 1
+ 152              	.LVL16:
+ 153              	.LBE11:
+ 154              	.LBE10:
+ 300:../src/platform/mpfs_hal/common/mss_h2f.c **** 
+ 301:../src/platform/mpfs_hal/common/mss_h2f.c ****     if(output_signal != M2F_MAPPING_INVALID)
+ 155              		.loc 1 301 5
+ 302:../src/platform/mpfs_hal/common/mss_h2f.c ****     {
+ 303:../src/platform/mpfs_hal/common/mss_h2f.c ****         /* enable the input */
+ 304:../src/platform/mpfs_hal/common/mss_h2f.c ****         M2F_CONTROLLER->PLENABLE[source_int/32U] &= ~(source_int % 32U);
+ 156              		.loc 1 304 9
+ 157 001c 1B575500 		srliw	a4,a0,5
+ 158              	.LVL17:
+ 159 0020 B7661220 		li	a3,538075136
+ 160 0024 0A07     		slli	a4,a4,2
+ 161 0026 3697     		add	a4,a3,a4
+ 162              		.loc 1 304 50 is_stmt 0
+ 163 0028 1053     		lw	a2,32(a4)
+ 164              		.loc 1 304 66
+ 165 002a 7D89     		andi	a0,a0,31
+ 166              	.LVL18:
+ 167              		.loc 1 304 53
+ 168 002c 1345F5FF 		not	a0,a0
+ 169              		.loc 1 304 50
+ 170 0030 0126     		sext.w	a2,a2
+ 171 0032 718D     		and	a0,a0,a2
+ 172 0034 08D3     		sw	a0,32(a4)
+ 305:../src/platform/mpfs_hal/common/mss_h2f.c ****         /* enable the output */
+ 306:../src/platform/mpfs_hal/common/mss_h2f.c ****         M2F_CONTROLLER->ENABLE &= ~(((output_signal<<16U)));
+ 173              		.loc 1 306 9 is_stmt 1
+ 174              		.loc 1 306 32 is_stmt 0
+ 175 0036 9842     		lw	a4,0(a3)
+ 176              	.LBB13:
+ 177              	.LBB12:
+ 250:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 178              		.loc 1 250 22
+ 179 0038 C167     		li	a5,65536
+ 180              	.LBE12:
+ 181              	.LBE13:
+ 182              		.loc 1 306 52
+ 183 003a BB97B700 		sllw	a5,a5,a1
+ 184              		.loc 1 306 35
+ 185 003e 93C7F7FF 		not	a5,a5
+ 186              		.loc 1 306 32
+ 187 0042 F98F     		and	a5,a5,a4
+ 188 0044 8127     		sext.w	a5,a5
+ 189 0046 9CC2     		sw	a5,0(a3)
+ 190              	.LVL19:
+ 191              	.L4:
+ 307:../src/platform/mpfs_hal/common/mss_h2f.c ****     }
+ 308:../src/platform/mpfs_hal/common/mss_h2f.c **** }
+ 192              		.loc 1 308 1
+ 193 0048 8280     		ret
+ 194              		.cfi_endproc
+ 195              	.LFE14:
+ 197              		.globl	M2F_int_mapping
+ 198              		.section	.rodata.M2F_int_mapping,"a"
+ 199              		.align	3
+ 200              		.set	.LANCHOR0,. + 0
+ 203              	M2F_int_mapping:
+ 204 0000 FF       		.byte	-1
+ 205 0001 FF       		.byte	-1
+ 206 0002 FF       		.byte	-1
+ 207 0003 FF       		.byte	-1
+ 208 0004 FF       		.byte	-1
+ 209 0005 FF       		.byte	-1
+ 210 0006 FF       		.byte	-1
+ 211 0007 FF       		.byte	-1
+ 212 0008 FF       		.byte	-1
+ 213 0009 FF       		.byte	-1
+ 214 000a FF       		.byte	-1
+ 215 000b FF       		.byte	-1
+ 216 000c FF       		.byte	-1
+ 217 000d 00       		.byte	0
+ 218 000e 00       		.byte	0
+ 219 000f 00       		.byte	0
+ 220 0010 00       		.byte	0
+ 221 0011 00       		.byte	0
+ 222 0012 00       		.byte	0
+ 223 0013 00       		.byte	0
+ 224 0014 00       		.byte	0
+ 225 0015 00       		.byte	0
+ 226 0016 00       		.byte	0
+ 227 0017 00       		.byte	0
+ 228 0018 00       		.byte	0
+ 229 0019 00       		.byte	0
+ 230 001a 00       		.byte	0
+ 231 001b 00       		.byte	0
+ 232 001c 00       		.byte	0
+ 233 001d 00       		.byte	0
+ 234 001e 00       		.byte	0
+ 235 001f 00       		.byte	0
+ 236 0020 00       		.byte	0
+ 237 0021 00       		.byte	0
+ 238 0022 00       		.byte	0
+ 239 0023 00       		.byte	0
+ 240 0024 00       		.byte	0
+ 241 0025 00       		.byte	0
+ 242 0026 00       		.byte	0
+ 243 0027 00       		.byte	0
+ 244 0028 00       		.byte	0
+ 245 0029 00       		.byte	0
+ 246 002a 00       		.byte	0
+ 247 002b 00       		.byte	0
+ 248 002c 00       		.byte	0
+ 249 002d 00       		.byte	0
+ 250 002e 00       		.byte	0
+ 251 002f 00       		.byte	0
+ 252 0030 00       		.byte	0
+ 253 0031 00       		.byte	0
+ 254 0032 00       		.byte	0
+ 255 0033 00       		.byte	0
+ 256 0034 00       		.byte	0
+ 257 0035 00       		.byte	0
+ 258 0036 01       		.byte	1
+ 259 0037 01       		.byte	1
+ 260 0038 01       		.byte	1
+ 261 0039 01       		.byte	1
+ 262 003a 02       		.byte	2
+ 263 003b 02       		.byte	2
+ 264 003c 02       		.byte	2
+ 265 003d 02       		.byte	2
+ 266 003e 02       		.byte	2
+ 267 003f 02       		.byte	2
+ 268 0040 03       		.byte	3
+ 269 0041 03       		.byte	3
+ 270 0042 03       		.byte	3
+ 271 0043 03       		.byte	3
+ 272 0044 03       		.byte	3
+ 273 0045 03       		.byte	3
+ 274 0046 04       		.byte	4
+ 275 0047 04       		.byte	4
+ 276 0048 04       		.byte	4
+ 277 0049 04       		.byte	4
+ 278 004a 04       		.byte	4
+ 279 004b 04       		.byte	4
+ 280 004c 09       		.byte	9
+ 281 004d 07       		.byte	7
+ 282 004e 06       		.byte	6
+ 283 004f 06       		.byte	6
+ 284 0050 0B       		.byte	11
+ 285 0051 0B       		.byte	11
+ 286 0052 0C       		.byte	12
+ 287 0053 0C       		.byte	12
+ 288 0054 0D       		.byte	13
+ 289 0055 0D       		.byte	13
+ 290 0056 0E       		.byte	14
+ 291 0057 0E       		.byte	14
+ 292 0058 0F       		.byte	15
+ 293 0059 0F       		.byte	15
+ 294 005a 01       		.byte	1
+ 295 005b 01       		.byte	1
+ 296 005c 01       		.byte	1
+ 297 005d 01       		.byte	1
+ 298 005e 01       		.byte	1
+ 299 005f 0A       		.byte	10
+ 300 0060 08       		.byte	8
+ 301 0061 0B       		.byte	11
+ 302 0062 0B       		.byte	11
+ 303 0063 06       		.byte	6
+ 304 0064 05       		.byte	5
+ 305 0065 05       		.byte	5
+ 306 0066 05       		.byte	5
+ 307 0067 05       		.byte	5
+ 308 0068 05       		.byte	5
+ 309 0069 05       		.byte	5
+ 310 006a 05       		.byte	5
+ 311 006b 05       		.byte	5
+ 312 006c 05       		.byte	5
+ 313 006d 05       		.byte	5
+ 314 006e 0D       		.byte	13
+ 315 006f FF       		.byte	-1
+ 316 0070 FF       		.byte	-1
+ 317 0071 FF       		.byte	-1
+ 318 0072 FF       		.byte	-1
+ 319 0073 0B       		.byte	11
+ 320 0074 0B       		.byte	11
+ 321 0075 FF       		.byte	-1
+ 322 0076 FF       		.byte	-1
+ 323 0077 FF       		.byte	-1
+ 324 0078 FF       		.byte	-1
+ 325 0079 FF       		.byte	-1
+ 326 007a FF       		.byte	-1
+ 327 007b FF       		.byte	-1
+ 328 007c FF       		.byte	-1
+ 329 007d FF       		.byte	-1
+ 330 007e FF       		.byte	-1
+ 331 007f FF       		.byte	-1
+ 332 0080 FF       		.byte	-1
+ 333 0081 FF       		.byte	-1
+ 334 0082 FF       		.byte	-1
+ 335 0083 FF       		.byte	-1
+ 336 0084 FF       		.byte	-1
+ 337 0085 FF       		.byte	-1
+ 338 0086 FF       		.byte	-1
+ 339 0087 FF       		.byte	-1
+ 340 0088 FF       		.byte	-1
+ 341 0089 FF       		.byte	-1
+ 342 008a FF       		.byte	-1
+ 343 008b FF       		.byte	-1
+ 344 008c FF       		.byte	-1
+ 345 008d FF       		.byte	-1
+ 346 008e FF       		.byte	-1
+ 347 008f FF       		.byte	-1
+ 348 0090 FF       		.byte	-1
+ 349 0091 FF       		.byte	-1
+ 350 0092 FF       		.byte	-1
+ 351 0093 FF       		.byte	-1
+ 352 0094 FF       		.byte	-1
+ 353 0095 FF       		.byte	-1
+ 354 0096 FF       		.byte	-1
+ 355 0097 FF       		.byte	-1
+ 356 0098 FF       		.byte	-1
+ 357 0099 FF       		.byte	-1
+ 358 009a FF       		.byte	-1
+ 359 009b FF       		.byte	-1
+ 360 009c FF       		.byte	-1
+ 361 009d FF       		.byte	-1
+ 362 009e FF       		.byte	-1
+ 363 009f FF       		.byte	-1
+ 364 00a0 FF       		.byte	-1
+ 365 00a1 FF       		.byte	-1
+ 366 00a2 FF       		.byte	-1
+ 367 00a3 FF       		.byte	-1
+ 368 00a4 FF       		.byte	-1
+ 369 00a5 FF       		.byte	-1
+ 370 00a6 FF       		.byte	-1
+ 371 00a7 FF       		.byte	-1
+ 372 00a8 FF       		.byte	-1
+ 373 00a9 FF       		.byte	-1
+ 374 00aa FF       		.byte	-1
+ 375 00ab FF       		.byte	-1
+ 376 00ac FF       		.byte	-1
+ 377 00ad FF       		.byte	-1
+ 378 00ae FF       		.byte	-1
+ 379 00af FF       		.byte	-1
+ 380 00b0 FF       		.byte	-1
+ 381 00b1 FF       		.byte	-1
+ 382 00b2 FF       		.byte	-1
+ 383 00b3 FF       		.byte	-1
+ 384 00b4 FF       		.byte	-1
+ 385 00b5 FF       		.byte	-1
+ 386 00b6 FF       		.byte	-1
+ 387 00b7 FF       		.byte	-1
+ 388 00b8 FF       		.byte	-1
+ 389 00b9 FF       		.byte	-1
+ 390              		.text
+ 391              	.Letext0:
+ 392              		.file 2 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/ris
+ 393              		.file 3 "/home/vinay/Desktop/soft_console/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/ris
+ 394              		.file 4 "../src/platform/mpfs_hal/common/mss_h2f.h"
+ 395              		.file 5 "../src/platform/mpfs_hal/common/mss_plic.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mss_h2f.c
+     /tmp/ccf1CL7w.s:13     .text.reset_m2f:0000000000000000 reset_m2f
+     /tmp/ccf1CL7w.s:17     .text.reset_m2f:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:18     .text.reset_m2f:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:20     .text.reset_m2f:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:21     .text.reset_m2f:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:22     .text.reset_m2f:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:25     .text.reset_m2f:0000000000000008 .L0 
+     /tmp/ccf1CL7w.s:26     .text.reset_m2f:0000000000000008 .L0 
+     /tmp/ccf1CL7w.s:27     .text.reset_m2f:0000000000000008 .L0 
+     /tmp/ccf1CL7w.s:30     .text.reset_m2f:000000000000000c .L0 
+     /tmp/ccf1CL7w.s:31     .text.reset_m2f:000000000000000c .L0 
+     /tmp/ccf1CL7w.s:32     .text.reset_m2f:000000000000000c .L0 
+     /tmp/ccf1CL7w.s:35     .text.reset_m2f:0000000000000010 .L0 
+     /tmp/ccf1CL7w.s:36     .text.reset_m2f:0000000000000010 .L0 
+     /tmp/ccf1CL7w.s:37     .text.reset_m2f:0000000000000010 .L0 
+     /tmp/ccf1CL7w.s:40     .text.reset_m2f:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:41     .text.reset_m2f:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:42     .text.reset_m2f:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:45     .text.reset_m2f:0000000000000018 .L0 
+     /tmp/ccf1CL7w.s:46     .text.reset_m2f:0000000000000018 .L0 
+     /tmp/ccf1CL7w.s:47     .text.reset_m2f:000000000000001a .L0 
+     /tmp/ccf1CL7w.s:54     .text.enable_m2f_int_output:0000000000000000 enable_m2f_int_output
+     /tmp/ccf1CL7w.s:57     .text.enable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:59     .text.enable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:62     .text.enable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:63     .text.enable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:64     .text.enable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:69     .text.enable_m2f_int_output:0000000000000010 .L0 
+     /tmp/ccf1CL7w.s:72     .text.enable_m2f_int_output:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:73     .text.enable_m2f_int_output:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:80     .text.enable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:81     .text.enable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:82     .text.enable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:83     .text.enable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:86     .text.enable_m2f_int_output:000000000000001e .L0 
+     /tmp/ccf1CL7w.s:91     .text.enable_m2f_int_output:000000000000002a .L0 
+     /tmp/ccf1CL7w.s:93     .text.enable_m2f_int_output:000000000000002c .L0 
+     /tmp/ccf1CL7w.s:98     .text.enable_m2f_int_output:0000000000000032 .L0 
+     /tmp/ccf1CL7w.s:102    .text.enable_m2f_int_output:0000000000000038 .L0 
+     /tmp/ccf1CL7w.s:103    .text.enable_m2f_int_output:0000000000000038 .L0 
+     /tmp/ccf1CL7w.s:107    .text.enable_m2f_int_output:000000000000003a .L0 
+     /tmp/ccf1CL7w.s:111    .text.enable_m2f_int_output:000000000000003e .L0 
+     /tmp/ccf1CL7w.s:113    .text.enable_m2f_int_output:0000000000000042 .L0 
+     /tmp/ccf1CL7w.s:121    .text.enable_m2f_int_output:000000000000004e .L0 
+     /tmp/ccf1CL7w.s:122    .text.enable_m2f_int_output:0000000000000050 .L0 
+     /tmp/ccf1CL7w.s:129    .text.disable_m2f_int_output:0000000000000000 disable_m2f_int_output
+     /tmp/ccf1CL7w.s:132    .text.disable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:134    .text.disable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:137    .text.disable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:138    .text.disable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:139    .text.disable_m2f_int_output:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:144    .text.disable_m2f_int_output:0000000000000010 .L0 
+     /tmp/ccf1CL7w.s:147    .text.disable_m2f_int_output:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:148    .text.disable_m2f_int_output:0000000000000014 .L0 
+     /tmp/ccf1CL7w.s:155    .text.disable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:156    .text.disable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:157    .text.disable_m2f_int_output:000000000000001c .L0 
+     /tmp/ccf1CL7w.s:163    .text.disable_m2f_int_output:0000000000000028 .L0 
+     /tmp/ccf1CL7w.s:165    .text.disable_m2f_int_output:000000000000002a .L0 
+     /tmp/ccf1CL7w.s:168    .text.disable_m2f_int_output:000000000000002c .L0 
+     /tmp/ccf1CL7w.s:170    .text.disable_m2f_int_output:0000000000000030 .L0 
+     /tmp/ccf1CL7w.s:174    .text.disable_m2f_int_output:0000000000000036 .L0 
+     /tmp/ccf1CL7w.s:175    .text.disable_m2f_int_output:0000000000000036 .L0 
+     /tmp/ccf1CL7w.s:179    .text.disable_m2f_int_output:0000000000000038 .L0 
+     /tmp/ccf1CL7w.s:183    .text.disable_m2f_int_output:000000000000003a .L0 
+     /tmp/ccf1CL7w.s:185    .text.disable_m2f_int_output:000000000000003e .L0 
+     /tmp/ccf1CL7w.s:187    .text.disable_m2f_int_output:0000000000000042 .L0 
+     /tmp/ccf1CL7w.s:193    .text.disable_m2f_int_output:0000000000000048 .L0 
+     /tmp/ccf1CL7w.s:194    .text.disable_m2f_int_output:000000000000004a .L0 
+     /tmp/ccf1CL7w.s:203    .rodata.M2F_int_mapping:0000000000000000 M2F_int_mapping
+     /tmp/ccf1CL7w.s:200    .rodata.M2F_int_mapping:0000000000000000 .LANCHOR0
+     /tmp/ccf1CL7w.s:50     .text.reset_m2f:000000000000001a .L0 
+     /tmp/ccf1CL7w.s:125    .text.enable_m2f_int_output:0000000000000050 .L0 
+     /tmp/ccf1CL7w.s:198    .text.disable_m2f_int_output:000000000000004a .L0 
+                     .debug_frame:0000000000000000 .L0 
+     /tmp/ccf1CL7w.s:66     .text.enable_m2f_int_output:0000000000000006 .L0 
+     /tmp/ccf1CL7w.s:119    .text.enable_m2f_int_output:000000000000004e .L2
+     /tmp/ccf1CL7w.s:141    .text.disable_m2f_int_output:0000000000000006 .L0 
+     /tmp/ccf1CL7w.s:191    .text.disable_m2f_int_output:0000000000000048 .L4
+     /tmp/ccf1CL7w.s:1260   .debug_abbrev:0000000000000000 .Ldebug_abbrev0
+     /tmp/ccf1CL7w.s:2135   .debug_str:0000000000000e54 .LASF211
+     /tmp/ccf1CL7w.s:2197   .debug_str:0000000000001258 .LASF212
+     /tmp/ccf1CL7w.s:2173   .debug_str:00000000000010dd .LASF213
+     /tmp/ccf1CL7w.s:1833   .debug_ranges:0000000000000000 .Ldebug_ranges0
+     /tmp/ccf1CL7w.s:1855   .debug_line:0000000000000000 .Ldebug_line0
+     /tmp/ccf1CL7w.s:1913   .debug_str:0000000000000304 .LASF0
+     /tmp/ccf1CL7w.s:1881   .debug_str:0000000000000148 .LASF4
+     /tmp/ccf1CL7w.s:2157   .debug_str:000000000000100e .LASF1
+     /tmp/ccf1CL7w.s:2169   .debug_str:00000000000010b8 .LASF2
+     /tmp/ccf1CL7w.s:2033   .debug_str:000000000000091c .LASF3
+     /tmp/ccf1CL7w.s:1979   .debug_str:0000000000000676 .LASF5
+     /tmp/ccf1CL7w.s:2007   .debug_str:00000000000007b6 .LASF6
+     /tmp/ccf1CL7w.s:1937   .debug_str:000000000000042a .LASF7
+     /tmp/ccf1CL7w.s:2021   .debug_str:000000000000086e .LASF8
+     /tmp/ccf1CL7w.s:2253   .debug_str:000000000000154f .LASF9
+     /tmp/ccf1CL7w.s:2195   .debug_str:000000000000124f .LASF10
+     /tmp/ccf1CL7w.s:2201   .debug_str:0000000000001299 .LASF11
+     /tmp/ccf1CL7w.s:2177   .debug_str:000000000000113a .LASF12
+     /tmp/ccf1CL7w.s:1863   .debug_str:000000000000005c .LASF13
+     /tmp/ccf1CL7w.s:1887   .debug_str:0000000000000180 .LASF14
+     /tmp/ccf1CL7w.s:2273   .debug_str:000000000000162f .LASF15
+     /tmp/ccf1CL7w.s:2145   .debug_str:0000000000000f7b .LASF16
+     /tmp/ccf1CL7w.s:2283   .debug_str:00000000000016c1 .LASF17
+     /tmp/ccf1CL7w.s:2127   .debug_str:0000000000000dfb .LASF18
+     /tmp/ccf1CL7w.s:2209   .debug_str:0000000000001309 .LASF19
+     /tmp/ccf1CL7w.s:1971   .debug_str:0000000000000606 .LASF20
+     /tmp/ccf1CL7w.s:1955   .debug_str:000000000000050c .LASF21
+     /tmp/ccf1CL7w.s:1953   .debug_str:00000000000004ef .LASF22
+     /tmp/ccf1CL7w.s:2183   .debug_str:0000000000001188 .LASF23
+     /tmp/ccf1CL7w.s:2051   .debug_str:00000000000009c6 .LASF24
+     /tmp/ccf1CL7w.s:2189   .debug_str:00000000000011e4 .LASF25
+     /tmp/ccf1CL7w.s:1997   .debug_str:0000000000000725 .LASF26
+     /tmp/ccf1CL7w.s:2187   .debug_str:00000000000011bb .LASF27
+     /tmp/ccf1CL7w.s:1939   .debug_str:0000000000000433 .LASF28
+     /tmp/ccf1CL7w.s:2083   .debug_str:0000000000000b8a .LASF29
+     /tmp/ccf1CL7w.s:2215   .debug_str:000000000000135e .LASF30
+     /tmp/ccf1CL7w.s:2027   .debug_str:00000000000008ad .LASF31
+     /tmp/ccf1CL7w.s:2165   .debug_str:0000000000001078 .LASF32
+     /tmp/ccf1CL7w.s:1969   .debug_str:00000000000005dd .LASF33
+     /tmp/ccf1CL7w.s:2119   .debug_str:0000000000000d83 .LASF34
+     /tmp/ccf1CL7w.s:2011   .debug_str:00000000000007dd .LASF35
+     /tmp/ccf1CL7w.s:1895   .debug_str:00000000000001ff .LASF36
+     /tmp/ccf1CL7w.s:1927   .debug_str:0000000000000396 .LASF37
+     /tmp/ccf1CL7w.s:2029   .debug_str:00000000000008d6 .LASF38
+     /tmp/ccf1CL7w.s:2063   .debug_str:0000000000000a64 .LASF39
+     /tmp/ccf1CL7w.s:1947   .debug_str:00000000000004a3 .LASF40
+     /tmp/ccf1CL7w.s:2281   .debug_str:0000000000001697 .LASF41
+     /tmp/ccf1CL7w.s:2203   .debug_str:00000000000012b1 .LASF42
+     /tmp/ccf1CL7w.s:2097   .debug_str:0000000000000c5a .LASF43
+     /tmp/ccf1CL7w.s:2081   .debug_str:0000000000000b60 .LASF44
+     /tmp/ccf1CL7w.s:2115   .debug_str:0000000000000d3e .LASF45
+     /tmp/ccf1CL7w.s:2005   .debug_str:000000000000078c .LASF46
+     /tmp/ccf1CL7w.s:1891   .debug_str:00000000000001be .LASF47
+     /tmp/ccf1CL7w.s:1905   .debug_str:0000000000000287 .LASF48
+     /tmp/ccf1CL7w.s:2249   .debug_str:000000000000150e .LASF49
+     /tmp/ccf1CL7w.s:2161   .debug_str:0000000000001036 .LASF50
+     /tmp/ccf1CL7w.s:2191   .debug_str:000000000000120d .LASF51
+     /tmp/ccf1CL7w.s:2091   .debug_str:0000000000000bfd .LASF52
+     /tmp/ccf1CL7w.s:1975   .debug_str:0000000000000634 .LASF53
+     /tmp/ccf1CL7w.s:1957   .debug_str:0000000000000528 .LASF54
+     /tmp/ccf1CL7w.s:1857   .debug_str:0000000000000000 .LASF55
+     /tmp/ccf1CL7w.s:1867   .debug_str:0000000000000094 .LASF56
+     /tmp/ccf1CL7w.s:2031   .debug_str:0000000000000900 .LASF57
+     /tmp/ccf1CL7w.s:2267   .debug_str:00000000000015e5 .LASF58
+     /tmp/ccf1CL7w.s:1995   .debug_str:0000000000000709 .LASF59
+     /tmp/ccf1CL7w.s:2175   .debug_str:000000000000111e .LASF60
+     /tmp/ccf1CL7w.s:1875   .debug_str:00000000000000f9 .LASF61
+     /tmp/ccf1CL7w.s:1961   .debug_str:0000000000000574 .LASF62
+     /tmp/ccf1CL7w.s:2067   .debug_str:0000000000000aa6 .LASF63
+     /tmp/ccf1CL7w.s:1959   .debug_str:0000000000000553 .LASF64
+     /tmp/ccf1CL7w.s:1943   .debug_str:0000000000000477 .LASF65
+     /tmp/ccf1CL7w.s:2121   .debug_str:0000000000000dae .LASF66
+     /tmp/ccf1CL7w.s:1931   .debug_str:00000000000003df .LASF67
+     /tmp/ccf1CL7w.s:2111   .debug_str:0000000000000d12 .LASF68
+     /tmp/ccf1CL7w.s:1861   .debug_str:0000000000000042 .LASF69
+     /tmp/ccf1CL7w.s:2015   .debug_str:0000000000000821 .LASF70
+     /tmp/ccf1CL7w.s:1915   .debug_str:0000000000000310 .LASF71
+     /tmp/ccf1CL7w.s:2277   .debug_str:0000000000001666 .LASF72
+     /tmp/ccf1CL7w.s:2093   .debug_str:0000000000000c28 .LASF73
+     /tmp/ccf1CL7w.s:2057   .debug_str:0000000000000a1c .LASF74
+     /tmp/ccf1CL7w.s:2013   .debug_str:0000000000000808 .LASF75
+     /tmp/ccf1CL7w.s:1935   .debug_str:000000000000040e .LASF76
+     /tmp/ccf1CL7w.s:2245   .debug_str:00000000000014db .LASF77
+     /tmp/ccf1CL7w.s:1963   .debug_str:0000000000000595 .LASF78
+     /tmp/ccf1CL7w.s:1933   .debug_str:00000000000003f4 .LASF79
+     /tmp/ccf1CL7w.s:2009   .debug_str:00000000000007c3 .LASF80
+     /tmp/ccf1CL7w.s:1897   .debug_str:000000000000022a .LASF81
+     /tmp/ccf1CL7w.s:2213   .debug_str:0000000000001342 .LASF82
+     /tmp/ccf1CL7w.s:1909   .debug_str:00000000000002d1 .LASF83
+     /tmp/ccf1CL7w.s:2141   .debug_str:0000000000000f48 .LASF84
+     /tmp/ccf1CL7w.s:1917   .debug_str:0000000000000329 .LASF85
+     /tmp/ccf1CL7w.s:1991   .debug_str:00000000000006ce .LASF86
+     /tmp/ccf1CL7w.s:1983   .debug_str:000000000000068a .LASF87
+     /tmp/ccf1CL7w.s:2235   .debug_str:0000000000001451 .LASF88
+     /tmp/ccf1CL7w.s:2151   .debug_str:0000000000000fc6 .LASF89
+     /tmp/ccf1CL7w.s:2085   .debug_str:0000000000000bb3 .LASF90
+     /tmp/ccf1CL7w.s:2219   .debug_str:000000000000138d .LASF91
+     /tmp/ccf1CL7w.s:2159   .debug_str:000000000000101c .LASF92
+     /tmp/ccf1CL7w.s:2089   .debug_str:0000000000000be6 .LASF93
+     /tmp/ccf1CL7w.s:2239   .debug_str:0000000000001488 .LASF94
+     /tmp/ccf1CL7w.s:1965   .debug_str:00000000000005b1 .LASF95
+     /tmp/ccf1CL7w.s:2043   .debug_str:0000000000000970 .LASF96
+     /tmp/ccf1CL7w.s:2061   .debug_str:0000000000000a4c .LASF97
+     /tmp/ccf1CL7w.s:2147   .debug_str:0000000000000f98 .LASF98
+     /tmp/ccf1CL7w.s:2237   .debug_str:000000000000146f .LASF99
+     /tmp/ccf1CL7w.s:2019   .debug_str:0000000000000853 .LASF100
+     /tmp/ccf1CL7w.s:1919   .debug_str:0000000000000343 .LASF101
+     /tmp/ccf1CL7w.s:2103   .debug_str:0000000000000cb2 .LASF102
+     /tmp/ccf1CL7w.s:2065   .debug_str:0000000000000a8e .LASF103
+     /tmp/ccf1CL7w.s:2269   .debug_str:0000000000001601 .LASF104
+     /tmp/ccf1CL7w.s:2001   .debug_str:000000000000075e .LASF105
+     /tmp/ccf1CL7w.s:1865   .debug_str:000000000000007e .LASF106
+     /tmp/ccf1CL7w.s:2087   .debug_str:0000000000000bcf .LASF107
+     /tmp/ccf1CL7w.s:2069   .debug_str:0000000000000ac7 .LASF108
+     /tmp/ccf1CL7w.s:1929   .debug_str:00000000000003c1 .LASF109
+     /tmp/ccf1CL7w.s:1879   .debug_str:000000000000012c .LASF110
+     /tmp/ccf1CL7w.s:2241   .debug_str:000000000000149f .LASF111
+     /tmp/ccf1CL7w.s:2231   .debug_str:000000000000141f .LASF112
+     /tmp/ccf1CL7w.s:2227   .debug_str:00000000000013ed .LASF113
+     /tmp/ccf1CL7w.s:2073   .debug_str:0000000000000b00 .LASF114
+     /tmp/ccf1CL7w.s:1873   .debug_str:00000000000000de .LASF115
+     /tmp/ccf1CL7w.s:2259   .debug_str:0000000000001585 .LASF116
+     /tmp/ccf1CL7w.s:2131   .debug_str:0000000000000e22 .LASF117
+     /tmp/ccf1CL7w.s:2117   .debug_str:0000000000000d68 .LASF118
+     /tmp/ccf1CL7w.s:2107   .debug_str:0000000000000ce0 .LASF119
+     /tmp/ccf1CL7w.s:1941   .debug_str:000000000000045c .LASF120
+     /tmp/ccf1CL7w.s:2017   .debug_str:000000000000083c .LASF121
+     /tmp/ccf1CL7w.s:2171   .debug_str:00000000000010c2 .LASF122
+     /tmp/ccf1CL7w.s:1949   .debug_str:00000000000004cd .LASF123
+     /tmp/ccf1CL7w.s:2221   .debug_str:00000000000013a8 .LASF124
+     /tmp/ccf1CL7w.s:2071   .debug_str:0000000000000ae4 .LASF125
+     /tmp/ccf1CL7w.s:2287   .debug_str:00000000000016e6 .LASF126
+     /tmp/ccf1CL7w.s:2275   .debug_str:000000000000164e .LASF127
+     /tmp/ccf1CL7w.s:2053   .debug_str:00000000000009ef .LASF128
+     /tmp/ccf1CL7w.s:2223   .debug_str:00000000000013c0 .LASF129
+     /tmp/ccf1CL7w.s:1921   .debug_str:000000000000035b .LASF130
+     /tmp/ccf1CL7w.s:2105   .debug_str:0000000000000cca .LASF131
+     /tmp/ccf1CL7w.s:2251   .debug_str:0000000000001539 .LASF132
+     /tmp/ccf1CL7w.s:2271   .debug_str:0000000000001619 .LASF133
+     /tmp/ccf1CL7w.s:2003   .debug_str:0000000000000776 .LASF134
+     /tmp/ccf1CL7w.s:2181   .debug_str:0000000000001172 .LASF135
+     /tmp/ccf1CL7w.s:2049   .debug_str:00000000000009b0 .LASF136
+     /tmp/ccf1CL7w.s:1901   .debug_str:000000000000025a .LASF137
+     /tmp/ccf1CL7w.s:2247   .debug_str:00000000000014f7 .LASF138
+     /tmp/ccf1CL7w.s:1967   .debug_str:00000000000005c6 .LASF139
+     /tmp/ccf1CL7w.s:2265   .debug_str:00000000000015ce .LASF140
+     /tmp/ccf1CL7w.s:2139   .debug_str:0000000000000f31 .LASF141
+     /tmp/ccf1CL7w.s:1877   .debug_str:0000000000000115 .LASF142
+     /tmp/ccf1CL7w.s:2045   .debug_str:0000000000000985 .LASF143
+     /tmp/ccf1CL7w.s:2279   .debug_str:0000000000001680 .LASF144
+     /tmp/ccf1CL7w.s:1911   .debug_str:00000000000002ed .LASF145
+     /tmp/ccf1CL7w.s:2095   .debug_str:0000000000000c43 .LASF146
+     /tmp/ccf1CL7w.s:2199   .debug_str:0000000000001282 .LASF147
+     /tmp/ccf1CL7w.s:2059   .debug_str:0000000000000a35 .LASF148
+     /tmp/ccf1CL7w.s:2255   .debug_str:0000000000001557 .LASF149
+     /tmp/ccf1CL7w.s:1885   .debug_str:0000000000000169 .LASF150
+     /tmp/ccf1CL7w.s:2263   .debug_str:00000000000015b7 .LASF151
+     /tmp/ccf1CL7w.s:2133   .debug_str:0000000000000e3d .LASF152
+     /tmp/ccf1CL7w.s:2163   .debug_str:0000000000001061 .LASF153
+     /tmp/ccf1CL7w.s:1869   .debug_str:00000000000000b0 .LASF154
+     /tmp/ccf1CL7w.s:2035   .debug_str:000000000000092f .LASF155
+     /tmp/ccf1CL7w.s:2207   .debug_str:00000000000012f2 .LASF156
+     /tmp/ccf1CL7w.s:2185   .debug_str:00000000000011a4 .LASF157
+     /tmp/ccf1CL7w.s:2179   .debug_str:000000000000115b .LASF158
+     /tmp/ccf1CL7w.s:2205   .debug_str:00000000000012db .LASF159
+     /tmp/ccf1CL7w.s:1899   .debug_str:0000000000000243 .LASF160
+     /tmp/ccf1CL7w.s:2075   .debug_str:0000000000000b1b .LASF161
+     /tmp/ccf1CL7w.s:2233   .debug_str:000000000000143a .LASF162
+     /tmp/ccf1CL7w.s:1945   .debug_str:000000000000048c .LASF163
+     /tmp/ccf1CL7w.s:2123   .debug_str:0000000000000dc3 .LASF164
+     /tmp/ccf1CL7w.s:2153   .debug_str:0000000000000fe0 .LASF165
+     /tmp/ccf1CL7w.s:1859   .debug_str:000000000000002b .LASF166
+     /tmp/ccf1CL7w.s:2025   .debug_str:0000000000000896 .LASF167
+     /tmp/ccf1CL7w.s:1903   .debug_str:0000000000000270 .LASF168
+     /tmp/ccf1CL7w.s:1989   .debug_str:00000000000006b7 .LASF169
+     /tmp/ccf1CL7w.s:2167   .debug_str:00000000000010a1 .LASF170
+     /tmp/ccf1CL7w.s:1871   .debug_str:00000000000000c7 .LASF171
+     /tmp/ccf1CL7w.s:1883   .debug_str:0000000000000152 .LASF172
+     /tmp/ccf1CL7w.s:2041   .debug_str:0000000000000959 .LASF173
+     /tmp/ccf1CL7w.s:2229   .debug_str:0000000000001408 .LASF174
+     /tmp/ccf1CL7w.s:2137   .debug_str:0000000000000f1a .LASF175
+     /tmp/ccf1CL7w.s:2113   .debug_str:0000000000000d27 .LASF176
+     /tmp/ccf1CL7w.s:2143   .debug_str:0000000000000f64 .LASF177
+     /tmp/ccf1CL7w.s:2079   .debug_str:0000000000000b49 .LASF178
+     /tmp/ccf1CL7w.s:2109   .debug_str:0000000000000cfb .LASF179
+     /tmp/ccf1CL7w.s:2257   .debug_str:000000000000156e .LASF180
+     /tmp/ccf1CL7w.s:1977   .debug_str:000000000000065f .LASF181
+     /tmp/ccf1CL7w.s:2155   .debug_str:0000000000000ff7 .LASF182
+     /tmp/ccf1CL7w.s:2077   .debug_str:0000000000000b32 .LASF183
+     /tmp/ccf1CL7w.s:2261   .debug_str:00000000000015a0 .LASF184
+     /tmp/ccf1CL7w.s:2099   .debug_str:0000000000000c84 .LASF185
+     /tmp/ccf1CL7w.s:2225   .debug_str:00000000000013d6 .LASF186
+     /tmp/ccf1CL7w.s:1923   .debug_str:0000000000000371 .LASF187
+     /tmp/ccf1CL7w.s:2193   .debug_str:0000000000001238 .LASF188
+     /tmp/ccf1CL7w.s:1893   .debug_str:00000000000001e8 .LASF189
+     /tmp/ccf1CL7w.s:2055   .debug_str:0000000000000a05 .LASF190
+     /tmp/ccf1CL7w.s:2101   .debug_str:0000000000000c9b .LASF191
+     /tmp/ccf1CL7w.s:1907   .debug_str:00000000000002b2 .LASF192
+     /tmp/ccf1CL7w.s:2125   .debug_str:0000000000000dda .LASF193
+     /tmp/ccf1CL7w.s:2243   .debug_str:00000000000014ba .LASF194
+     /tmp/ccf1CL7w.s:1889   .debug_str:000000000000019d .LASF195
+     /tmp/ccf1CL7w.s:1993   .debug_str:00000000000006e8 .LASF196
+     /tmp/ccf1CL7w.s:1973   .debug_str:0000000000000623 .LASF203
+     /tmp/ccf1CL7w.s:1951   .debug_str:00000000000004e8 .LASF197
+     /tmp/ccf1CL7w.s:2037   .debug_str:0000000000000946 .LASF198
+     /tmp/ccf1CL7w.s:1987   .debug_str:00000000000006b0 .LASF199
+     /tmp/ccf1CL7w.s:2285   .debug_str:00000000000016dd .LASF200
+     /tmp/ccf1CL7w.s:2039   .debug_str:0000000000000950 .LASF201
+     /tmp/ccf1CL7w.s:2047   .debug_str:000000000000099c .LASF202
+     /tmp/ccf1CL7w.s:1999   .debug_str:000000000000074e .LASF204
+     /tmp/ccf1CL7w.s:2149   .debug_str:0000000000000faf .LASF205
+     /tmp/ccf1CL7w.s:130    .text.disable_m2f_int_output:0000000000000000 .LFB14
+     /tmp/ccf1CL7w.s:195    .text.disable_m2f_int_output:000000000000004a .LFE14
+     /tmp/ccf1CL7w.s:1985   .debug_str:00000000000006a5 .LASF207
+     /tmp/ccf1CL7w.s:1602   .debug_loc:0000000000000000 .LLST5
+     /tmp/ccf1CL7w.s:1925   .debug_str:0000000000000388 .LASF208
+     /tmp/ccf1CL7w.s:1616   .debug_loc:0000000000000039 .LLST6
+     /tmp/ccf1CL7w.s:135    .text.disable_m2f_int_output:0000000000000000 .LBB10
+     /tmp/ccf1CL7w.s:1668   .debug_loc:00000000000000b5 .LLST7
+     /tmp/ccf1CL7w.s:1675   .debug_loc:00000000000000d8 .LLST8
+     /tmp/ccf1CL7w.s:2023   .debug_str:0000000000000880 .LASF206
+     /tmp/ccf1CL7w.s:55     .text.enable_m2f_int_output:0000000000000000 .LFB13
+     /tmp/ccf1CL7w.s:123    .text.enable_m2f_int_output:0000000000000050 .LFE13
+     /tmp/ccf1CL7w.s:1703   .debug_loc:0000000000000126 .LLST1
+     /tmp/ccf1CL7w.s:1723   .debug_loc:0000000000000174 .LLST2
+     /tmp/ccf1CL7w.s:60     .text.enable_m2f_int_output:0000000000000000 .LBB4
+     /tmp/ccf1CL7w.s:1753   .debug_loc:00000000000001c4 .LLST3
+     /tmp/ccf1CL7w.s:1760   .debug_loc:00000000000001e7 .LLST4
+     /tmp/ccf1CL7w.s:2129   .debug_str:0000000000000e18 .LASF209
+     /tmp/ccf1CL7w.s:14     .text.reset_m2f:0000000000000000 .LFB12
+     /tmp/ccf1CL7w.s:48     .text.reset_m2f:000000000000001a .LFE12
+     /tmp/ccf1CL7w.s:2217   .debug_str:0000000000001387 .LASF210
+     /tmp/ccf1CL7w.s:1788   .debug_loc:0000000000000235 .LLST0
+     /tmp/ccf1CL7w.s:2211   .debug_str:0000000000001325 .LASF214
+     /tmp/ccf1CL7w.s:1981   .debug_str:0000000000000681 .LASF215
+     /tmp/ccf1CL7w.s:133    .text.disable_m2f_int_output:0000000000000000 .LVL13
+     /tmp/ccf1CL7w.s:166    .text.disable_m2f_int_output:000000000000002c .LVL18
+     /tmp/ccf1CL7w.s:152    .text.disable_m2f_int_output:000000000000001c .LVL16
+     /tmp/ccf1CL7w.s:158    .text.disable_m2f_int_output:0000000000000020 .LVL17
+     /tmp/ccf1CL7w.s:190    .text.disable_m2f_int_output:0000000000000048 .LVL19
+     /tmp/ccf1CL7w.s:145    .text.disable_m2f_int_output:0000000000000014 .LVL14
+     /tmp/ccf1CL7w.s:149    .text.disable_m2f_int_output:0000000000000018 .LVL15
+     /tmp/ccf1CL7w.s:58     .text.enable_m2f_int_output:0000000000000000 .LVL5
+     /tmp/ccf1CL7w.s:84     .text.enable_m2f_int_output:000000000000001e .LVL9
+     /tmp/ccf1CL7w.s:96     .text.enable_m2f_int_output:0000000000000032 .LVL11
+     /tmp/ccf1CL7w.s:118    .text.enable_m2f_int_output:000000000000004e .LVL12
+     /tmp/ccf1CL7w.s:77     .text.enable_m2f_int_output:000000000000001c .LVL8
+     /tmp/ccf1CL7w.s:94     .text.enable_m2f_int_output:000000000000002e .LVL10
+     /tmp/ccf1CL7w.s:70     .text.enable_m2f_int_output:0000000000000014 .LVL6
+     /tmp/ccf1CL7w.s:74     .text.enable_m2f_int_output:0000000000000018 .LVL7
+     /tmp/ccf1CL7w.s:19     .text.reset_m2f:0000000000000000 .LVL0
+     /tmp/ccf1CL7w.s:29     .text.reset_m2f:000000000000000c .LVL1
+     /tmp/ccf1CL7w.s:34     .text.reset_m2f:0000000000000010 .LVL2
+     /tmp/ccf1CL7w.s:39     .text.reset_m2f:0000000000000014 .LVL3
+     /tmp/ccf1CL7w.s:44     .text.reset_m2f:0000000000000018 .LVL4
+     /tmp/ccf1CL7w.s:397    .debug_info:0000000000000000 .Ldebug_info0
+     /tmp/ccf1CL7w.s:79     .text.enable_m2f_int_output:000000000000001c .LBE4
+     /tmp/ccf1CL7w.s:104    .text.enable_m2f_int_output:000000000000003a .LBB7
+     /tmp/ccf1CL7w.s:109    .text.enable_m2f_int_output:000000000000003e .LBE7
+     /tmp/ccf1CL7w.s:154    .text.disable_m2f_int_output:000000000000001c .LBE10
+     /tmp/ccf1CL7w.s:176    .text.disable_m2f_int_output:0000000000000038 .LBB13
+     /tmp/ccf1CL7w.s:181    .text.disable_m2f_int_output:000000000000003a .LBE13
+
+NO UNDEFINED SYMBOLS
